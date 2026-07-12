@@ -40,6 +40,10 @@ import {
   verifyReplayActionTarget,
 } from './session-replay-target-verification.ts';
 import { buildReplayBuiltinVars } from './session-replay-vars.ts';
+import {
+  isTypedMaestroReplay,
+  runTypedMaestroReplayFile,
+} from './session-replay-maestro-runtime.ts';
 
 /** Per-run invariants for a single replay step (ADR 0012 step 4 verify + dispatch + guard). */
 type ReplayStepContext = {
@@ -150,6 +154,9 @@ export async function runReplayScriptFile(params: {
   const artifactPaths = new Set<string>();
   try {
     resolved = SessionStore.expandHome(filePath, req.meta?.cwd);
+    if (isTypedMaestroReplay(req, resolved)) {
+      return await runTypedMaestroReplayFile({ req, sessionName, sessionStore, invoke });
+    }
     const script = fs.readFileSync(resolved, 'utf8');
     const firstNonWhitespace = script.trimStart()[0];
     if (firstNonWhitespace === '{' || firstNonWhitespace === '[') {
@@ -159,7 +166,11 @@ export async function runReplayScriptFile(params: {
       );
     }
 
-    const parsed = parseReplayInput(script, req.flags, { sourcePath: resolved });
+    const parseFlags =
+      req.flags?.replayBackend === 'maestro'
+        ? { ...req.flags, replayBackend: undefined }
+        : req.flags;
+    const parsed = parseReplayInput(script, parseFlags, { sourcePath: resolved });
     const metadata = parsed.metadata;
     const replayReq =
       metadata.platform || metadata.target
