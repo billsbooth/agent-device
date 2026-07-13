@@ -816,6 +816,7 @@ export type FindOptions =
 export type ReplayRunOptions = AgentDeviceRequestOverrides &
   AgentDeviceSelectionOptions & {
     path: string;
+    runtime?: SessionRuntimeHints;
     /**
      * @deprecated ADR 0012 migration step 6: `--update` no longer rewrites
      * the script. Accepted for backward compatibility; every divergence
@@ -848,6 +849,7 @@ export type ReplayRunOptions = AgentDeviceRequestOverrides &
 export type ReplayTestOptions = AgentDeviceRequestOverrides &
   AgentDeviceSelectionOptions & {
     paths: string[];
+    runtime?: SessionRuntimeHints;
     update?: boolean;
     /** @deprecated Use backend: 'maestro'. */
     maestro?: boolean;
