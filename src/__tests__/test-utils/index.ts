@@ -21,6 +21,7 @@ export {
 export { makeSnapshotState } from './snapshot-builders.ts';
 
 export {
+  ANDROID_SNAPSHOT_HELPER_FIXTURE_ARTIFACT,
   androidSnapshotHelperOutput,
   createAndroidSnapshotHelperExecutor,
   isAndroidSnapshotHelperCapture,
