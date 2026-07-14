@@ -20,6 +20,12 @@ export {
 
 export { makeSnapshotState } from './snapshot-builders.ts';
 
+export {
+  androidSnapshotHelperOutput,
+  createAndroidSnapshotHelperExecutor,
+  isAndroidSnapshotHelperCapture,
+} from './android-snapshot-helper.ts';
+
 export { makeSessionStore } from './store-factory.ts';
 
 export { withNoColor } from './color.ts';

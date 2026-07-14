@@ -17,7 +17,7 @@ import type { RecordingExportQuality } from '../core/recording-export-quality.ts
 import type { RecordingScope } from '../contracts/recording-scope.ts';
 import type { DeviceInfo, Platform, PlatformSelector } from '../kernel/device.ts';
 import type { ExecBackgroundResult, ExecResult } from '../utils/exec.ts';
-import type { SnapshotState } from '../kernel/snapshot.ts';
+import type { Rect, SnapshotState } from '../kernel/snapshot.ts';
 import type { TargetAnnotationV1 } from '../replay/target-identity.ts';
 import type { ReplayTargetGuardDenotation } from '../replay/target-identity-node.ts';
 import type { AppLogFailure, AppLogState } from './app-log-process.ts';
@@ -57,6 +57,8 @@ export type DaemonOpenLifecycle = {
 type DaemonRequestInternal = {
   openLifecycle?: DaemonOpenLifecycle;
   admittedLease?: DeviceLease;
+  /** Provider-owned viewport already resolved while normalizing a nested gesture command. */
+  gestureViewport?: Rect;
   /**
    * ADR 0012 step 4 post-resolution guard: the verified target member's
    * normalized local identity AND structural denotation (document order +
