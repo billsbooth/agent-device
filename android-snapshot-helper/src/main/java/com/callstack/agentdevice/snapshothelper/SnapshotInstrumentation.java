@@ -341,6 +341,7 @@ public final class SnapshotInstrumentation extends Instrumentation {
         // Busy or animated apps can still expose a usable root; capture whatever is available.
       }
     }
+    clearAccessibilityCache(automation);
 
     CaptureStats stats = new CaptureStats();
     StringBuilder xml = new StringBuilder();
@@ -365,6 +366,38 @@ public final class SnapshotInstrumentation extends Instrumentation {
     xml.append("</hierarchy>");
     return new CaptureResult(
         xml.toString(), windowCount > 0, captureMode, windowCount, stats.nodeCount, stats.truncated);
+  }
+
+  private static void clearAccessibilityCache(UiAutomation automation) {
+    // Navigation 3 and any in-place content swap that keeps the same window/Activity render every
+    // destination inside one AndroidComposeView. A persistent helper session reuses a single
+    // UiAutomation connection across captures, and its per-connection accessibility node cache is
+    // not always invalidated by such a swap, so getWindows()/getRootInActiveWindow() can keep
+    // returning the previous screen. Drop the cache before each traversal so every capture re-reads
+    // the live tree, the way a fresh `uiautomator dump` (new connection, empty cache) does.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      try {
+        automation.clearCache();
+        return;
+      } catch (RuntimeException ignored) {
+        // Fall back to the reflective reset below if the platform rejects the public API.
+      }
+    }
+    clearAccessibilityCacheViaReflection();
+  }
+
+  private static void clearAccessibilityCacheViaReflection() {
+    // Platforms before API 34 lack UiAutomation.clearCache(); reset the AccessibilityCache that
+    // AccessibilityInteractionClient keeps for the helper's connection instead. Best-effort: if the
+    // internal API is unavailable the capture proceeds with whatever the framework returns.
+    try {
+      Class<?> clientClass =
+          Class.forName("android.view.accessibility.AccessibilityInteractionClient");
+      Object client = clientClass.getMethod("getInstance").invoke(null);
+      clientClass.getMethod("clearCache").invoke(client);
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
+      // No reliable cache reset on this platform; leave capture behavior unchanged.
+    }
   }
 
   private UiAutomation getConnectedUiAutomation(long timeoutMs) throws TimeoutException {
